@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KLD 视频学习台</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#/"><span class="logo">K</span><span>KLD</span></a>
+  <div class="clip-head" id="clipHead" hidden>
+    <div class="clip-title" id="clipTitle"></div>
+    <div class="clip-meta" id="clipMeta"></div>
+  </div>
+  <div class="top-actions">
+    <button class="btn ghost" id="previewBtn" hidden>预览笔记</button>
+    <button class="btn primary" id="exportBtn" hidden>存入 Obsidian</button>
+    <button class="btn ghost icon" id="settingsBtn" title="设置">⚙</button>
+  </div>
+</header>
+
+<!-- 首页 -->
+<main id="home" class="home" hidden>
+  <section class="card collect-card">
+    <div class="collect-brand"><span class="logo">K</span><h1>KLD 视频学习台</h1></div>
+    <p class="muted">粘一个小红书视频或 Udemy 课程链接，自动取逐字稿 + 话题拆分，进入学习台边看边追问。</p>
+    <label class="label" for="urlInput">视频 / 课程链接</label>
+    <form class="collect-row" id="collectForm">
+      <input id="urlInput" placeholder="小红书链接 / xhslink 短链 / Udemy 课程或课时链接…" autocomplete="off">
+      <button class="btn primary" id="collectBtn">开始采集</button>
+    </form>
+    <p class="hint">◷ 粘贴后在本地处理，约 10~60 秒（取视频 + 字幕 + 话题切分），完成后自动进入学习台。</p>
+    <div class="steps" id="steps">
+      <div class="step" data-k="0"><i></i><span>解析链接</span></div>
+      <div class="step" data-k="1"><i></i><span>下载视频</span></div>
+      <div class="step" data-k="2"><i></i><span>生成逐字稿</span></div>
+      <div class="step" data-k="3"><i></i><span>按话题切分</span></div>
+    </div>
+    <div class="collect-status" id="collectStatus"></div>
+    <div class="udemy-bar small">
+      <span class="muted">Udemy：</span><span id="udemyState">检查中…</span>
+      <button class="link small" id="udemyLogin">登录 Udemy</button>
+      <button class="link small" id="udemyCancel" hidden>取消</button>
+    </div>
+  </section>
+
+  <section class="card course-card" id="coursePicker" hidden>
+    <div class="card-head">
+      <div>
+        <div class="small muted">Udemy 课程</div>
+        <h3 id="courseTitle"></h3>
+      </div>
+      <button class="btn ghost" id="courseClose">关闭</button>
+    </div>
+    <div class="course-tools">
+      <span class="small muted" id="courseCount"></span>
+      <button class="link small" data-sel="all">全选</button>
+      <button class="link small" data-sel="none">全不选</button>
+      <button class="link small" data-sel="new">只选未导入</button>
+      <label class="small muted">字幕语言 <select id="capLang"></select></label>
+    </div>
+    <div class="chapters" id="chapters"></div>
+    <div class="row-end">
+      <span class="small muted" id="importHint"></span>
+      <button class="btn primary" id="importBtn">导入所选</button>
+    </div>
+  </section>
+
+  <section class="library">
+    <div class="section-head"><h2>我的视频</h2><span class="muted" id="libCount"></span></div>
+    <div class="lib-grid" id="libGrid"></div>
+  </section>
+</main>
+
+<!-- 学习台 -->
+<main id="workspace" class="workspace" hidden>
+  <div class="col left">
+    <section class="card video-card">
+      <video id="video" controls preload="metadata" playsinline></video>
+      <div class="external" id="external" hidden>
+        <div>
+          <b>视频在 Udemy 上播放</b>
+          <p class="small muted">课程视频有版权保护，KLD 只导入了字幕。点逐字稿里的任意一句、话题或 AI 回答里的时间点，都会在同一个 Udemy 标签页里跳到那个时间。</p>
+        </div>
+        <button class="btn primary" id="openExternal">在 Udemy 打开</button>
+      </div>
+      <div class="video-bar">
+        <button class="btn primary" id="captureBtn">📷 截当前帧</button>
+        <span class="muted small" id="frameCount"></span>
+      </div>
+      <p class="hint" id="captureHint">看到画面里有命令 / 工具名 / 数据图 / 金句卡，点「截当前帧」并补一句它为什么重要。也可以截图后直接 Ctrl+V 粘贴进来。</p>
+      <div class="capture-draft" id="captureDraft" hidden>
+        <img id="draftImg" alt="">
+        <div class="draft-side">
+          <div class="small muted draft-time">时间 <input id="draftClock" value="0:00" size="6"> <span id="draftTime"></span></div>
+          <textarea id="draftCaption" rows="3" placeholder="这帧为什么重要？例如：接入命令 npx -y lark-channel-bridge@latest start"></textarea>
+          <div class="row-end">
+            <button class="btn ghost" id="draftCancel">取消</button>
+            <button class="btn primary" id="draftSave">保存关键帧</button>
+          </div>
+        </div>
+      </div>
+      <div class="frames" id="frames"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h3><i class="dot"></i>话题</h3>
+        <span class="muted small">点话题只看这一段 · 视频自动跳转 <button class="link" id="regenTopics" title="用 AI 重新切分">↻</button></span>
+      </div>
+      <div class="chips" id="chips"></div>
+    </section>
+
+    <section class="card notes-card">
+      <div class="card-head">
+        <h3><i class="dot"></i>我的笔记</h3>
+        <span class="muted small" id="notesState">自动保存</span>
+      </div>
+      <textarea id="notes" placeholder="想到什么、想让我注意什么，写这里……AI 回答里点「加入笔记」也会追加到这里。"></textarea>
+    </section>
+  </div>
+
+  <div class="col right">
+    <section class="card panel">
+      <div class="tabs">
+        <button class="tab active" data-tab="transcript"><i class="dot"></i>逐字稿</button>
+        <button class="tab" data-tab="chat"><i class="dot"></i>AI 追问 <span class="badge" id="chatCount"></span></button>
+        <label class="follow small muted"><input type="checkbox" id="followToggle" checked> 跟随播放</label>
+      </div>
+      <div class="tab-body" id="transcriptPane"></div>
+      <div class="tab-body chat-pane" id="chatPane" hidden>
+        <div class="chat-list" id="chatList"></div>
+        <div class="chat-input">
+          <div class="quick" id="quick">
+            <button data-q="用三五句话讲清楚这一段在说什么">总结这一段</button>
+            <button data-q="这一段我没太看懂，换个更通俗的说法解释一下，最好举个例子">没看懂，再讲讲</button>
+            <button data-q="视频里提到的工具、命令、链接都列出来，标上时间点">列出工具和命令</button>
+            <button data-q="把整条视频整理成一篇适合放进 Obsidian 的结构化学习笔记：核心观点、步骤、要点、我可以马上行动的事">整理成笔记</button>
+          </div>
+          <div class="focus-tag small" id="focusTag" hidden></div>
+          <form class="chat-row" id="chatForm">
+            <textarea id="chatInput" rows="2" placeholder="哪里没看懂就继续追问…（Enter 发送，Shift+Enter 换行）"></textarea>
+            <button class="btn primary" id="chatSend">发送</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- 设置 -->
+<dialog id="settingsDlg" class="dlg">
+  <form method="dialog" id="settingsForm">
+    <h3>设置</h3>
+    <label class="label">Claude API Key <span class="muted small" id="keyHint"></span></label>
+    <input id="apiKey" type="password" placeholder="sk-ant-…（留空则不修改）" autocomplete="off">
+    <p class="hint">用于话题切分和 AI 追问。不填也能用：话题会按时长自动切分，只是没有追问功能。</p>
+    <label class="label">存入 Obsidian 的方式</label>
+    <div class="seg" id="targetSeg">
+      <label><input type="radio" name="target" value="github"> GitHub 仓库同步（推荐，云端用）</label>
+      <label id="localOpt"><input type="radio" name="target" value="local"> 写入本机文件夹</label>
+    </div>
+    <div id="githubFields">
+      <label class="label">GitHub 仓库</label>
+      <input id="ghRepo" placeholder="你的用户名/obsidian-vault">
+      <label class="label">分支</label>
+      <input id="ghBranch" placeholder="main">
+      <label class="label">GitHub token <span class="muted small" id="ghHint"></span></label>
+      <input id="ghToken" type="password" placeholder="github_pat_…（留空则不修改）" autocomplete="off">
+      <p class="hint">在 GitHub → Settings → Developer settings → Fine-grained tokens 新建：只选这一个仓库，权限 Contents 设为 Read and write。电脑和手机上的 Obsidian 装 Obsidian Git 插件拉取这个仓库。</p>
+    </div>
+    <div id="localFields">
+      <label class="label">Obsidian 仓库路径</label>
+      <input id="vaultPath" placeholder="D:\Obsidian\MyVault">
+    </div>
+    <label class="label">存放文件夹</label>
+    <input id="vaultFolder" placeholder="视频笔记">
+    <p class="hint">导出后在仓库里生成 <code>文件夹/视频标题.md</code>，关键帧放在 <code>文件夹/attachments/</code>。</p>
+    <div class="row-end">
+      <button class="btn ghost" id="logoutBtn" type="button" hidden>退出登录</button>
+      <button class="btn ghost" value="cancel">取消</button>
+      <button class="btn primary" id="settingsSave" value="save">保存</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="previewDlg" class="dlg wide">
+  <div class="card-head"><h3>笔记预览（Markdown）</h3><button class="btn ghost" onclick="previewDlg.close()">关闭</button></div>
+  <pre id="previewBody"></pre>
+</dialog>
+
+<div class="toast" id="toast"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

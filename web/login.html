@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>登录 · KLD</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<main class="home">
+  <form class="card collect-card login-card" id="f">
+    <div class="collect-brand"><span class="logo">K</span><h1>KLD 视频学习台</h1></div>
+    <label class="label" for="pw">访问密码</label>
+    <div class="collect-row">
+      <input id="pw" type="password" autocomplete="current-password" autofocus>
+      <button class="btn primary">进入</button>
+    </div>
+    <div class="collect-status err" id="msg"></div>
+  </form>
+</main>
+<script>
+document.getElementById("f").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById("msg");
+  msg.textContent = "";
+  const r = await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password: document.getElementById("pw").value }),
+  });
+  if (r.ok) location.href = "/";
+  else msg.textContent = (await r.json()).detail || "登录失败";
+});
+</script>
+</body>
+</html>

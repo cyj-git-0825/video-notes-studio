@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KLD 设置</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .opt { max-width: 620px; margin: 0 auto; padding: 32px 16px 60px; }
+  .opt h2 { font-size: 15px; margin: 0 0 4px; }
+  .opt .row-end { justify-content: flex-start; }
+  .msg { font-size: 13px; margin-top: 8px; min-height: 18px; }
+  .msg.ok { color: var(--t1b); } .msg.err { color: var(--accent); }
+  .check { display: flex; align-items: center; gap: 6px; margin-top: 12px; }
+  .check input { width: auto; }
+</style>
+</head>
+<body>
+<main class="opt">
+  <div class="collect-brand"><span class="logo">K</span><h1>KLD 设置</h1></div>
+  <p class="muted">这些信息只保存在这台电脑的 Chrome 里。Claude Key 只发给 Anthropic，GitHub token 只发给 GitHub。</p>
+
+  <section class="card">
+    <h2>Claude（话题切分、AI 追问）</h2>
+    <label class="label" for="claudeKey">API Key <span class="small muted" id="keyHint"></span></label>
+    <input id="claudeKey" type="password" placeholder="sk-ant-…（留空则不修改）" autocomplete="off">
+    <label class="label" for="model">模型</label>
+    <input id="model" placeholder="claude-opus-5-5">
+    <p class="hint">在 console.anthropic.com 创建 Key，按用量付费。不填也能用：话题会按时长粗分，但没有 AI 追问。</p>
+    <div class="row-end"><button class="btn ghost" id="testClaude">测试</button></div>
+    <div class="msg" id="claudeMsg"></div>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>Obsidian 仓库（GitHub）</h2>
+    <label class="label" for="ghRepo">仓库</label>
+    <input id="ghRepo" placeholder="你的用户名/obsidian-vault">
+    <label class="label" for="ghBranch">分支</label>
+    <input id="ghBranch" placeholder="main">
+    <label class="label" for="ghToken">Token <span class="small muted" id="ghHint"></span></label>
+    <input id="ghToken" type="password" placeholder="github_pat_…（留空则不修改）" autocomplete="off">
+    <p class="hint">GitHub → Settings → Developer settings → Fine-grained tokens：只选这一个仓库，权限 Contents 设为 Read and write。</p>
+    <label class="label" for="folder">笔记放在哪个文件夹</label>
+    <input id="folder" placeholder="视频笔记">
+    <label class="check small"><input type="checkbox" id="autosync"> 学习时自动同步（改动后约 1 分钟提交一次）</label>
+    <div class="row-end"><button class="btn ghost" id="testGh">测试</button></div>
+    <div class="msg" id="ghMsg"></div>
+  </section>
+
+  <div class="row-end" style="margin-top:20px">
+    <button class="btn primary" id="save">保存</button>
+    <span class="msg" id="saveMsg"></span>
+  </div>
+</main>
+<script src="dist/options.js"></script>
+</body>
+</html>

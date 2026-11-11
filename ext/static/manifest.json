@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "KLD 视频学习台",
+  "version": "0.2.0",
+  "description": "把小红书视频和 Udemy 课程变成知识：逐字稿、话题、AI 追问、关键帧、笔记，存进 Obsidian（GitHub 同步）。",
+  "permissions": ["storage", "declarativeNetRequestWithHostAccess"],
+  "host_permissions": [
+    "https://*.udemy.com/*",
+    "https://*.udemycdn.com/*",
+    "https://xhslink.cn/*",
+    "https://xhslink.com/*",
+    "https://www.xiaohongshu.com/*",
+    "https://*.xhscdn.com/*",
+    "https://api.anthropic.com/*",
+    "https://api.github.com/*"
+  ],
+  "background": { "service_worker": "dist/bg.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://*.udemy.com/course/*"],
+      "js": ["dist/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": { "default_title": "KLD：在 Udemy 课时页显示 / 隐藏侧边栏，其他页面打开学习台" },
+  "options_page": "options.html"
+}

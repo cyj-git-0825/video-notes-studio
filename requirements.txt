@@ -1,0 +1,9 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+anthropic>=2.2
+httpx>=0.27
+python-multipart
+curl_cffi>=0.7        # 模拟 Chrome 请求，用于通过 Udemy 的 Cloudflare
+playwright>=1.45      # 「登录 Udemy」弹出的 Chrome 窗口（用本机 Chrome，不另下浏览器）
+# 可选：没有平台字幕的视频用本地转写
+# faster-whisper
