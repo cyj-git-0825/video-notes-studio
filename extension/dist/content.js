@@ -157,7 +157,8 @@
       S.now = -1;
       if (!pl) {
         $(".meta").textContent = "";
-        setBody(`<div class="empty">打开一节视频课，就能在这里学习。</div>`);
+        const intro = /^\/course\/[^/]+\/?$/.test(location.pathname);
+        setBody(intro ? `<div class="empty">这是课程介绍页，页面上的预览视频没法导入。<br>请先报名这门课，然后点开任意一节课时（网址里会出现 <code>/learn/lecture/</code>），再回到这里导入。</div>` : `<div class="empty">进入一节课时（网址里有 <code>/learn/lecture/</code>），就能在这里导入字幕学习。</div>`);
         return;
       }
       const cfg = await chrome.runtime.sendMessage({ type: "config" });
