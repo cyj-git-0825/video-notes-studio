@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "KLD 视频学习台",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "把小红书视频和 Udemy 课程变成知识：逐字稿、话题、AI 追问、关键帧、笔记，存进 Obsidian（GitHub 同步）。",
   "permissions": ["storage", "scripting", "declarativeNetRequestWithHostAccess"],
   "host_permissions": [
@@ -12,7 +12,12 @@
     "https://www.xiaohongshu.com/*",
     "https://*.xhscdn.com/*",
     "https://api.anthropic.com/*",
-    "https://api.github.com/*"
+    "https://api.github.com/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.groq.com/*",
+    "https://openrouter.ai/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
   ],
   "background": { "service_worker": "dist/bg.js" },
   "content_scripts": [

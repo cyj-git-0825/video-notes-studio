@@ -32,6 +32,7 @@ Chrome 插件
 | AI 追问 | AI 读过整份逐字稿、话题和关键帧，回答里带 `[mm:ss]` 时间点，点一下就跳过去 |
 | 关键帧 | 小红书视频点「截当前帧」；Udemy 用 Win+Shift+S 截图后 Ctrl+V 粘贴，时间点自动取当前播放位置 |
 | 我的笔记 | 自动保存；AI 回答点「加入笔记」会追加进来 |
+| AI 整理笔记 | 点「✨ AI 整理笔记」，把逐字稿整理成结构化笔记（总结、分节要点、时间点）追加到笔记里；可以用免费模型（Gemini / Groq / OpenRouter / 本机 Ollama），没配就用 Claude |
 | 存入 Obsidian | 小红书视频存为 `视频笔记/标题.md`，课程存为 `视频笔记/课程名/001 课时名.md`，关键帧放在 `attachments/` |
 
 ## 安装（一次性设置）
@@ -54,6 +55,7 @@ Chrome 插件
 1. 打开 `chrome://extensions`，打开右上角的**开发者模式**
 2. 点**加载已解压的扩展程序**，选择仓库里的 `extension` 文件夹
 3. 插件会打开设置页（也可以右键插件图标 → 选项）：填 Claude API Key 和 GitHub 仓库、token，分别点「测试」确认，再保存
+   - 想用免费模型整理笔记：在「免费模型」里选服务商。推荐 Google Gemini，去 [aistudio.google.com/apikey](https://aistudio.google.com/apikey) 免费申请 Key
 
 用法：
 - **小红书**：点插件图标打开学习台，粘贴链接

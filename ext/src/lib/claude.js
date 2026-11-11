@@ -11,7 +11,7 @@ export class NoKeyError extends Error {
   constructor() { super("还没有配置 Claude API Key：右键插件图标 → 选项"); }
 }
 
-async function client() {
+export async function client() {
   const s = await getSettings();
   if (!s.claudeKey) throw new NoKeyError();
   // 浏览器里调用需要显式允许；Key 只保存在本机 chrome.storage，请求只发往 Anthropic

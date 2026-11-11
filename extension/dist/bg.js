@@ -89,12 +89,12 @@
         return AnthropicError2;
       })();
       APIError = class _APIError extends AnthropicError {
-        constructor(status, error62, message, headers, type) {
+        constructor(status, error62, message, headers2, type) {
           super(`${_APIError.makeMessage(status, error62, message)}`);
           this.status = status;
-          this.headers = headers;
-          this.requestID = headers?.get("request-id");
-          this.workspaceID = headers?.get("anthropic-workspace-id");
+          this.headers = headers2;
+          this.requestID = headers2?.get("request-id");
+          this.workspaceID = headers2?.get("anthropic-workspace-id");
           this.error = error62;
           this.type = type ?? null;
         }
@@ -111,37 +111,37 @@
           }
           return "(no status code or body)";
         }
-        static generate(status, errorResponse, message, headers) {
-          if (!status || !headers) {
+        static generate(status, errorResponse, message, headers2) {
+          if (!status || !headers2) {
             return new APIConnectionError({ message, cause: castToError(errorResponse) });
           }
           const error62 = errorResponse;
           const type = error62?.["error"]?.["type"];
           if (status === 400) {
-            return new BadRequestError(status, error62, message, headers, type);
+            return new BadRequestError(status, error62, message, headers2, type);
           }
           if (status === 401) {
-            return new AuthenticationError(status, error62, message, headers, type);
+            return new AuthenticationError(status, error62, message, headers2, type);
           }
           if (status === 403) {
-            return new PermissionDeniedError(status, error62, message, headers, type);
+            return new PermissionDeniedError(status, error62, message, headers2, type);
           }
           if (status === 404) {
-            return new NotFoundError(status, error62, message, headers, type);
+            return new NotFoundError(status, error62, message, headers2, type);
           }
           if (status === 409) {
-            return new ConflictError(status, error62, message, headers, type);
+            return new ConflictError(status, error62, message, headers2, type);
           }
           if (status === 422) {
-            return new UnprocessableEntityError(status, error62, message, headers, type);
+            return new UnprocessableEntityError(status, error62, message, headers2, type);
           }
           if (status === 429) {
-            return new RateLimitError(status, error62, message, headers, type);
+            return new RateLimitError(status, error62, message, headers2, type);
           }
           if (status >= 500) {
-            return new InternalServerError(status, error62, message, headers, type);
+            return new InternalServerError(status, error62, message, headers2, type);
           }
-          return new _APIError(status, error62, message, headers, type);
+          return new _APIError(status, error62, message, headers2, type);
         }
       };
       APIUserAbortError = class extends APIError {
@@ -939,12 +939,12 @@
             throw new Error("Secret can't be empty.");
           }
         }
-        verify(payload, headers, options) {
+        verify(payload, headers2, options) {
           var _a4;
           const jsonParse = (_a4 = options === null || options === void 0 ? void 0 : options.jsonParse) !== null && _a4 !== void 0 ? _a4 : true;
           const normalizedHeaders = {};
-          for (const key of Object.keys(headers)) {
-            normalizedHeaders[key.toLowerCase()] = headers[key];
+          for (const key of Object.keys(headers2)) {
+            normalizedHeaders[key.toLowerCase()] = headers2[key];
           }
           const msgId = normalizedHeaders["webhook-id"];
           const msgSignature = normalizedHeaders["webhook-signature"];
@@ -1482,7 +1482,7 @@
   }
 
   // node_modules/@anthropic-ai/sdk/internal/request-options.mjs
-  var FallbackEncoder = ({ headers, body }) => {
+  var FallbackEncoder = ({ headers: headers2, body }) => {
     return {
       bodyHeaders: {
         "content-type": "application/json"
@@ -2788,11 +2788,11 @@
 
   // node_modules/@anthropic-ai/sdk/internal/headers.mjs
   var brand_privateNullableHeaders = /* @__PURE__ */ Symbol.for("brand.privateNullableHeaders");
-  function* iterateHeaders(headers) {
-    if (!headers)
+  function* iterateHeaders(headers2) {
+    if (!headers2)
       return;
-    if (brand_privateNullableHeaders in headers) {
-      const { values, nulls } = headers;
+    if (brand_privateNullableHeaders in headers2) {
+      const { values, nulls } = headers2;
       yield* values.entries();
       for (const name of nulls) {
         yield [name, null];
@@ -2801,13 +2801,13 @@
     }
     let shouldClear = false;
     let iter;
-    if (headers instanceof Headers) {
-      iter = headers.entries();
-    } else if (isReadonlyArray(headers)) {
-      iter = headers;
+    if (headers2 instanceof Headers) {
+      iter = headers2.entries();
+    } else if (isReadonlyArray(headers2)) {
+      iter = headers2;
     } else {
       shouldClear = true;
-      iter = Object.entries(headers ?? {});
+      iter = Object.entries(headers2 ?? {});
     }
     for (let row of iter) {
       const name = row[0];
@@ -2839,9 +2839,9 @@
   var buildHeaders = (newHeaders) => {
     const targetHeaders = new Headers();
     const nullHeaders = /* @__PURE__ */ new Set();
-    for (const headers of newHeaders) {
+    for (const headers2 of newHeaders) {
       const seenHeaders = /* @__PURE__ */ new Set();
-      for (const [name, value] of iterateHeaders(headers)) {
+      for (const [name, value] of iterateHeaders(headers2)) {
         const lowerName = name.toLowerCase();
         if (APPEND_HEADERS.has(lowerName)) {
           if (value === clearSentinel)
@@ -3028,8 +3028,8 @@
     });
     return parts.length ? { value: parts.join("&"), content } : void 0;
   }
-  function injectTraceHeaders(span, headers) {
-    const values = buildHeaders([headers]).values;
+  function injectTraceHeaders(span, headers2) {
+    const values = buildHeaders([headers2]).values;
     for (const [key, value] of Object.entries(injectContext(span))) {
       values.set(key, value);
     }
@@ -4121,7 +4121,7 @@
   }
 
   // node_modules/@anthropic-ai/sdk/lib/internal/tracing/response.mjs
-  function setResponseAttributes(span, message, usage, complete) {
+  function setResponseAttributes(span, message, usage, complete2) {
     span.setAttribute(ATTR_GEN_AI_RESPONSE_ID, message.id);
     span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, message.model);
     span.setAttribute(ATTR_GEN_AI_USAGE_INPUT_TOKENS, usage.input_tokens + (usage.cache_read_input_tokens ?? 0) + (usage.cache_creation_input_tokens ?? 0));
@@ -4139,7 +4139,7 @@
     if (usage.service_tier != null) {
       span.setAttribute(ATTR_ANTHROPIC_RESPONSE_SERVICE_TIER, usage.service_tier);
     }
-    if (!complete) {
+    if (!complete2) {
       return;
     }
     span.setAttribute(ATTR_GEN_AI_USAGE_OUTPUT_TOKENS, usage.output_tokens);
@@ -4164,9 +4164,9 @@
     }
     try {
       const error62 = result.status === "error" ? result.error : void 0;
-      const headers = result.response?.headers ?? (error62 instanceof APIError ? error62.headers : void 0);
+      const headers2 = result.response?.headers ?? (error62 instanceof APIError ? error62.headers : void 0);
       for (const [attribute, header] of RESPONSE_HEADER_ATTRIBUTES) {
-        const value = headers?.get(header);
+        const value = headers2?.get(header);
         if (value) {
           span.setAttribute(attribute, value);
         }
@@ -4175,13 +4175,13 @@
       loggerFor(client2).debug("could not record the API call on its span", problem);
     }
   }
-  function messagesCreateSpanSettings(client2, body, headers) {
+  function messagesCreateSpanSettings(client2, body, headers2) {
     const attributes = {
       [ATTR_GEN_AI_OPERATION_NAME]: GEN_AI_OPERATION_NAME_VALUE_CHAT,
       [ATTR_GEN_AI_REQUEST_MODEL]: body.model
     };
     try {
-      const betas = (buildHeaders([client2._options.defaultHeaders, headers]).values.get("anthropic-beta") ?? "").split(",").map((beta) => beta.trim()).filter(Boolean);
+      const betas = (buildHeaders([client2._options.defaultHeaders, headers2]).values.get("anthropic-beta") ?? "").split(",").map((beta) => beta.trim()).filter(Boolean);
       if (betas.length) {
         attributes[ATTR_ANTHROPIC_BETA] = betas;
       }
@@ -4272,19 +4272,19 @@
   }
 
   // node_modules/@anthropic-ai/sdk/lib/internal/tracing/headers.mjs
-  function takeTraceHeaders(headers) {
+  function takeTraceHeaders(headers2) {
     const names = traceHeaderNames();
-    const taken = Array.from(headers.entries()).filter(([name]) => names.has(name));
+    const taken = Array.from(headers2.entries()).filter(([name]) => names.has(name));
     for (const [name] of taken) {
-      headers.delete(name);
+      headers2.delete(name);
     }
     return taken;
   }
   function withoutTraceHeaders(middleware) {
     return (request2, next, ctx) => {
-      const headers = new Headers(request2.headers);
-      const traceHeaders = takeTraceHeaders(headers);
-      return middleware({ ...request2, headers }, (inner) => {
+      const headers2 = new Headers(request2.headers);
+      const traceHeaders = takeTraceHeaders(headers2);
+      return middleware({ ...request2, headers: headers2 }, (inner) => {
         const restored = new Headers(inner.headers);
         for (const [name, value] of traceHeaders)
           restored.set(name, value);
@@ -5156,10 +5156,10 @@
       if (middleware.length === 0) {
         return fetchFn.call(void 0, url2, init);
       }
-      const headers = init.headers instanceof Headers ? init.headers : new Headers(init.headers);
+      const headers2 = init.headers instanceof Headers ? init.headers : new Headers(init.headers);
       const response = await applyMiddleware(fetchFn, middleware, options, client2)({
         ...init,
-        headers,
+        headers: headers2,
         url: typeof url2 === "string" ? url2 : url2 instanceof URL ? url2.href : url2.url
       });
       if (response.bodyUsed || response.body?.locked) {
@@ -5716,8 +5716,8 @@
   function startMessagesStreamSpan(client2, body, options) {
     if (!client2._tracer)
       return void 0;
-    const headers = messagesCreateHeaders(body, options);
-    return startApiCallSpan(client2, "anthropic.messages.create", options, messagesCreateSpanSettings(client2, { ...body, stream: true }, headers));
+    const headers2 = messagesCreateHeaders(body, options);
+    return startApiCallSpan(client2, "anthropic.messages.create", options, messagesCreateSpanSettings(client2, { ...body, stream: true }, headers2));
   }
 
   // node_modules/@anthropic-ai/sdk/lib/MessageStream.mjs
@@ -7030,15 +7030,15 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
           const maxNonstreamingTokens = MODEL_NONSTREAMING_TOKENS[body.model] ?? void 0;
           timeout = this._client.calculateNonstreamingTimeout(body.max_tokens, maxNonstreamingTokens);
         }
-        const headers = messagesCreateHeaders(params, options);
-        const call = this._client._tracer && startApiCallSpan(this._client, "anthropic.messages.create", options, messagesCreateSpanSettings(this._client, body, headers));
+        const headers2 = messagesCreateHeaders(params, options);
+        const call = this._client._tracer && startApiCallSpan(this._client, "anthropic.messages.create", options, messagesCreateSpanSettings(this._client, body, headers2));
         recordMessagesCreateRequest(this._client, call, body);
         const request2 = this._client.post("/v1/messages", {
           body,
           timeout: timeout ?? 6e5,
           ...options,
           __span: call,
-          headers,
+          headers: headers2,
           stream: params.stream ?? false
         });
         return call ? request2._thenUnwrap((data) => {
@@ -7115,7 +7115,7 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
        */
       countTokens(params, options) {
         const { user_profile_id, workspace_id, ...body } = params;
-        const headers = buildHeaders([
+        const headers2 = buildHeaders([
           {
             ...user_profile_id != null ? { "anthropic-user-profile-id": user_profile_id } : void 0,
             ...workspace_id != null ? { "anthropic-workspace-id": workspace_id } : void 0
@@ -7130,7 +7130,7 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
           body,
           ...options,
           __span: call,
-          headers
+          headers: headers2
         });
         return call ? request2._thenUnwrap((count) => {
           recordCountTokensResponse(this._client, call, count);
@@ -7904,14 +7904,14 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
      * payload into an event. Fails if the signature is missing or invalid.
      */
     unwrap(body, options) {
-      const headers = options?.headers;
-      if (headers == null)
+      const headers2 = options?.headers;
+      if (headers2 == null)
         throw new Error("Webhook headers are required in order to verify the signature");
       const keyStr = options.key === void 0 ? this._client.webhookKey : options.key;
       if (!keyStr)
         throw new Error("Webhook key must not be null or empty in order to unwrap");
       const wh = new import_standardwebhooks.Webhook(keyStr);
-      wh.verify(body, headers);
+      wh.verify(body, headers2);
       return JSON.parse(body);
     }
   };
@@ -10819,8 +10819,8 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
   function startMessagesStreamSpan2(client2, body, options) {
     if (!client2._tracer)
       return void 0;
-    const headers = messagesCreateHeaders2(body, options);
-    return startApiCallSpan(client2, "anthropic.messages.create", options, messagesCreateSpanSettings(client2, { ...transformOutputFormat(body), stream: true }, headers));
+    const headers2 = messagesCreateHeaders2(body, options);
+    return startApiCallSpan(client2, "anthropic.messages.create", options, messagesCreateSpanSettings(client2, { ...transformOutputFormat(body), stream: true }, headers2));
   }
   function transformOutputFormat(params) {
     if (!params.output_format) {
@@ -17501,7 +17501,7 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
        */
       create(params, options) {
         const { betas, workspace_id, ...body } = params;
-        const headers = buildHeaders([
+        const headers2 = buildHeaders([
           {
             "anthropic-beta": [...betas ?? [], "managed-agents-2026-04-01"].toString(),
             ...workspace_id != null ? { "anthropic-workspace-id": workspace_id } : void 0
@@ -17520,7 +17520,7 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
         const request2 = this._client.post("/v1/sessions", {
           body,
           ...options,
-          headers,
+          headers: headers2,
           __qualifiers: { beta: "true" },
           __span: call
         });
@@ -19490,11 +19490,11 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
   function createOnlyJSON(fields) {
     return { system: JSON.stringify(fields.system), tools: JSON.stringify(fields.tools) };
   }
-  function withThreadsBeta(headers) {
-    const callerBetas = buildHeaders([headers]).values.get("anthropic-beta");
+  function withThreadsBeta(headers2) {
+    const callerBetas = buildHeaders([headers2]).values.get("anthropic-beta");
     if (callerBetas === null)
-      return headers;
-    return buildHeaders([headers, { "anthropic-beta": appendHeaderValue(callerBetas, MESSAGE_THREADS_BETA) }]);
+      return headers2;
+    return buildHeaders([headers2, { "anthropic-beta": appendHeaderValue(callerBetas, MESSAGE_THREADS_BETA) }]);
   }
   function replayReason(error62) {
     const errorCode = errorDetails(error62)?.["error_code"];
@@ -20061,8 +20061,8 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
         yield __classPrivateFieldGet(this, _BetaToolRunner_message, "f");
       }
     }, _BetaToolRunner_turnOptions = function _BetaToolRunner_turnOptions2(thread) {
-      const { headers = thread._state.options.headers } = __classPrivateFieldGet(this, _BetaToolRunner_options, "f");
-      return { ...__classPrivateFieldGet(this, _BetaToolRunner_options, "f"), headers: buildHeaders([__classPrivateFieldGet(this, _BetaToolRunner_helperHeader, "f"), headers]) };
+      const { headers: headers2 = thread._state.options.headers } = __classPrivateFieldGet(this, _BetaToolRunner_options, "f");
+      return { ...__classPrivateFieldGet(this, _BetaToolRunner_options, "f"), headers: buildHeaders([__classPrivateFieldGet(this, _BetaToolRunner_helperHeader, "f"), headers2]) };
     }, _BetaToolRunner_streamThatStartsTools = function _BetaToolRunner_streamThatStartsTools2(thread) {
       const calls = /* @__PURE__ */ new Map();
       __classPrivateFieldSet(this, _BetaToolRunner_calls, calls, "f");
@@ -20636,8 +20636,8 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
           const maxNonstreamingTokens = MODEL_NONSTREAMING_TOKENS[body.model] ?? void 0;
           timeout = this._client.calculateNonstreamingTimeout(body.max_tokens, maxNonstreamingTokens);
         }
-        const headers = messagesCreateHeaders2(modifiedParams, options);
-        const call = this._client._tracer && startApiCallSpan(this._client, "anthropic.messages.create", options, messagesCreateSpanSettings(this._client, body, headers));
+        const headers2 = messagesCreateHeaders2(modifiedParams, options);
+        const call = this._client._tracer && startApiCallSpan(this._client, "anthropic.messages.create", options, messagesCreateSpanSettings(this._client, body, headers2));
         recordMessagesCreateRequest(this._client, call, body);
         const request2 = this._client.post("/v1/messages", {
           body,
@@ -20645,7 +20645,7 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
           ...options,
           __qualifiers: { beta: "true" },
           __span: call,
-          headers,
+          headers: headers2,
           stream: modifiedParams.stream ?? false
         });
         return call ? request2._thenUnwrap((data) => {
@@ -20706,7 +20706,7 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
       countTokens(params, options) {
         const modifiedParams = transformOutputFormat(params);
         const { betas, user_profile_id, workspace_id, ...body } = modifiedParams;
-        const headers = buildHeaders([
+        const headers2 = buildHeaders([
           {
             "anthropic-beta": [...betas ?? [], "token-counting-2024-11-01"].toString(),
             ...user_profile_id != null ? { "anthropic-user-profile-id": user_profile_id } : void 0,
@@ -20723,7 +20723,7 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
           ...options,
           __qualifiers: { beta: "true" },
           __span: call,
-          headers
+          headers: headers2
         });
         return call ? request2._thenUnwrap((count) => {
           recordCountTokensResponse(this._client, call, count);
@@ -23574,8 +23574,8 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
       getUserAgent() {
         return `Anthropic/JS ${VERSION}`;
       }
-      makeStatusError(status, error62, message, headers) {
-        return APIError.generate(status, error62, message, headers);
+      makeStatusError(status, error62, message, headers2) {
+        return APIError.generate(status, error62, message, headers2);
       }
       buildURL(path3, query, defaultBaseURL) {
         const baseURL = !__classPrivateFieldGet(this, _BaseAnthropic_instances, "m", _BaseAnthropic_baseURLOverridden).call(this) && defaultBaseURL || this.baseURL;
@@ -23621,16 +23621,16 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
        */
       async prepareRequest(request2, { url: url2, options }) {
         if (this._authState.tokenCache && this.apiKey == null) {
-          const headers = request2.headers instanceof Headers ? request2.headers : new Headers(request2.headers);
+          const headers2 = request2.headers instanceof Headers ? request2.headers : new Headers(request2.headers);
           for (const [k, v] of Object.entries(this._authState.extraHeaders)) {
-            if (!headers.has(k))
-              headers.set(k, v);
+            if (!headers2.has(k))
+              headers2.set(k, v);
           }
-          const existing = headers.get("anthropic-beta")?.split(",").map((s) => s.trim());
+          const existing = headers2.get("anthropic-beta")?.split(",").map((s) => s.trim());
           if (!existing?.includes(OAUTH_API_BETA_HEADER)) {
-            headers.set("anthropic-beta", [...existing ?? [], OAUTH_API_BETA_HEADER].join(","));
+            headers2.set("anthropic-beta", [...existing ?? [], OAUTH_API_BETA_HEADER].join(","));
           }
-          request2.headers = headers;
+          request2.headers = headers2;
         }
       }
       /**
@@ -23985,7 +23985,7 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
         return { req, url: url2, timeout: options.timeout };
       }
       async buildHeaders({ options, method, bodyHeaders, retryCount, timeout }) {
-        const headers = buildHeaders([
+        const headers2 = buildHeaders([
           {
             Accept: "application/json",
             "User-Agent": this.getUserAgent(),
@@ -24000,8 +24000,8 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
           bodyHeaders,
           options.headers
         ]);
-        this.validateHeaders(headers);
-        return headers.values;
+        this.validateHeaders(headers2);
+        return headers2.values;
       }
       _makeAbort(controller) {
         return () => controller.abort();
@@ -24010,11 +24010,11 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
         if (!body) {
           return { bodyHeaders: void 0, body: void 0 };
         }
-        const headers = buildHeaders([rawHeaders]);
+        const headers2 = buildHeaders([rawHeaders]);
         if (
           // Pass raw type verbatim
           ArrayBuffer.isView(body) || body instanceof ArrayBuffer || body instanceof DataView || typeof body === "string" && // Preserve legacy string encoding behavior for now
-          headers.values.has("content-type") || // `Blob` is superset of `File`
+          headers2.values.has("content-type") || // `Blob` is superset of `File`
           globalThis.Blob && body instanceof globalThis.Blob || // `FormData` -> `multipart/form-data`
           body instanceof FormData || // `URLSearchParams` -> `application/x-www-form-urlencoded`
           body instanceof URLSearchParams || // Send chunked stream (each chunk has own `length`)
@@ -24023,13 +24023,13 @@ Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resour
           return { bodyHeaders: void 0, body };
         } else if (this.isStreamBody(body)) {
           return { bodyHeaders: void 0, body: ReadableStreamFrom(body) };
-        } else if (typeof body === "object" && headers.values.get("content-type") === "application/x-www-form-urlencoded") {
+        } else if (typeof body === "object" && headers2.values.get("content-type") === "application/x-www-form-urlencoded") {
           return {
             bodyHeaders: { "content-type": "application/x-www-form-urlencoded" },
             body: this.stringifyQuery(body)
           };
         } else {
-          return __classPrivateFieldGet(this, _BaseAnthropic_encoder, "f").call(this, { body, headers });
+          return __classPrivateFieldGet(this, _BaseAnthropic_encoder, "f").call(this, { body, headers: headers2 });
         }
       }
       /**
@@ -43941,7 +43941,12 @@ ${formattedIssues}${suffix}`);
     ghBranch: "main",
     ghToken: "",
     folder: "视频笔记",
-    autosync: true
+    autosync: true,
+    // 免费模型（OpenAI 兼容接口），用来把逐字稿整理成笔记；freeProvider 为空表示不用
+    freeProvider: "",
+    freeBase: "",
+    freeKey: "",
+    freeModel: ""
   };
   async function getSettings() {
     return { ...DEFAULTS, ...await chrome.storage.local.get(Object.keys(DEFAULTS)) };
@@ -44044,8 +44049,8 @@ ${formattedIssues}${suffix}`);
 - 用户用中文提问就用中文回答；视频是英文的，术语保留英文原文并给出中文解释。
 - 默认简洁，用 Markdown；用户要求“整理成笔记”时，输出适合放进 Obsidian 的结构化笔记。`;
   function contextBlock(clip) {
-    const mmss = (t) => `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
-    const frames = clip.frames.map((f) => `- [${mmss(f.time)}] 截图说明：${f.caption || "（无说明）"}`).join("\n");
+    const mmss2 = (t) => `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+    const frames = clip.frames.map((f) => `- [${mmss2(f.time)}] 截图说明：${f.caption || "（无说明）"}`).join("\n");
     const topics = clip.topics.map((t, i) => `${i + 1}. ${t.title}（字幕 ${t.start_cue}-${t.end_cue}）：${t.summary || ""}`).join("\n");
     const head = clip.course ? `课程：${clip.course.title}
 章节：${clip.chapter || ""}
@@ -44162,6 +44167,129 @@ ${messages.at(-1).content}` };
   async function configured() {
     const s = await getSettings();
     return !!(s.ghRepo && s.ghToken);
+  }
+
+  // src/lib/freeai.js
+  var PRESETS = {
+    gemini: {
+      name: "Google Gemini（免费额度，推荐）",
+      base: "https://generativelanguage.googleapis.com/v1beta/openai",
+      model: "gemini-2.5-flash",
+      keyUrl: "https://aistudio.google.com/apikey",
+      note: "上下文很长，一整节课的逐字稿一次放得下。免费额度下 Google 可能用你的数据改进模型。"
+    },
+    groq: {
+      name: "Groq（免费额度，速度快）",
+      base: "https://api.groq.com/openai/v1",
+      model: "llama-3.3-70b-versatile",
+      keyUrl: "https://console.groq.com/keys",
+      note: "免费额度每分钟的 token 数有限，太长的逐字稿可能被拒。"
+    },
+    openrouter: {
+      name: "OpenRouter（:free 模型）",
+      base: "https://openrouter.ai/api/v1",
+      model: "deepseek/deepseek-chat-v3-0324:free",
+      keyUrl: "https://openrouter.ai/keys",
+      note: "免费模型每天有次数限制，可用的模型会变，点「测试」看当前列表。"
+    },
+    ollama: {
+      name: "Ollama（本机运行，完全免费）",
+      base: "http://localhost:11434/v1",
+      model: "qwen2.5:7b",
+      keyUrl: "",
+      note: "需要先装 Ollama 并拉取模型，并设置环境变量 OLLAMA_ORIGINS=chrome-extension://* 后重启 Ollama。默认上下文较短，长逐字稿建议调大 num_ctx。"
+    },
+    custom: { name: "其他 OpenAI 兼容接口", base: "", model: "", keyUrl: "", note: "" }
+  };
+  async function freeConfig() {
+    const s = await getSettings();
+    if (!s.freeProvider) return null;
+    const p = PRESETS[s.freeProvider] || PRESETS.custom;
+    const base = (s.freeBase || p.base).replace(/\/+$/, "");
+    const model = s.freeModel || p.model;
+    if (!base || !model) return null;
+    return { provider: s.freeProvider, base, model, key: s.freeKey };
+  }
+  var headers = (cfg2) => ({ "Content-Type": "application/json", ...cfg2.key ? { Authorization: `Bearer ${cfg2.key}` } : {} });
+  async function fail(r) {
+    let msg = "";
+    try {
+      const d = await r.json();
+      msg = d.error?.message || d.message || JSON.stringify(d);
+    } catch {
+      msg = await r.text().catch(() => "");
+    }
+    if (r.status === 401 || r.status === 403) return new Error(`免费模型的 Key 无效或没有权限（${r.status}）`);
+    if (r.status === 429) return new Error("免费额度用完了或请求太频繁，稍后再试（429）");
+    return new Error(`免费模型返回 ${r.status}：${msg.slice(0, 200)}`);
+  }
+  async function complete(cfg2, messages) {
+    let r;
+    try {
+      r = await fetch(`${cfg2.base}/chat/completions`, {
+        method: "POST",
+        headers: headers(cfg2),
+        body: JSON.stringify({ model: cfg2.model, messages, temperature: 0.3 })
+      });
+    } catch (e) {
+      throw new Error(cfg2.provider === "ollama" ? "连不上本机 Ollama：确认它在运行，并设置了 OLLAMA_ORIGINS" : `连不上免费模型：${e.message}`);
+    }
+    if (!r.ok) throw await fail(r);
+    const d = await r.json();
+    const text = d.choices?.[0]?.message?.content;
+    if (!text) throw new Error("免费模型没有返回内容");
+    return text;
+  }
+
+  // src/lib/notesai.js
+  var mmss = (t) => `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+  var SYSTEM = `你是一个擅长做学习笔记的助手。用户给你一条视频（小红书笔记或在线课程的一节课）的逐字稿，请整理成一份结构化的 Markdown 学习笔记，用户会把它放进 Obsidian。
+要求：
+- 用中文写；视频是英文的，专有名词和术语保留英文原文，第一次出现时附中文解释。
+- 字幕来自语音识别，常有同音错字，请按上下文理解并写对。
+- 结构：先用 2~3 句话写「一句话总结」，然后按内容分成若干小节（### 标题），每节用要点列出核心观点、步骤、例子、数字；最后写「要点回顾」和（如果有的话）「可以动手试试」。
+- 每个小节标题或关键要点后面标出对应的视频时间点，格式为 [mm:ss]，必须来自逐字稿里真实出现的时间。
+- 只根据视频内容写，不要编造视频里没有的信息；视频里没讲清楚的地方可以标注「（视频未展开）」。
+- 直接输出笔记正文，不要用 \`\`\` 包裹，不要写开场白。`;
+  function userPrompt(clip) {
+    const head = clip.course ? `课程：${clip.course.title}
+章节：${clip.chapter || ""}
+课时：${clip.title}` : `标题：${clip.title}
+作者：${clip.author || ""}
+简介：${clip.desc || ""}`;
+    const topics = clip.topics?.length ? "\n\n已有的话题划分（可参考）：\n" + clip.topics.map((t, i) => `${i + 1}. [${mmss(clip.cues[t.start_cue]?.start || 0)}] ${t.title}：${t.summary || ""}`).join("\n") : "";
+    const frames = clip.frames?.length ? "\n\n用户截取的关键帧（说明这些地方用户觉得重要）：\n" + clip.frames.map((f) => `- [${mmss(f.time)}] ${f.caption || "（无说明）"}`).join("\n") : "";
+    const cues = clip.cues.map((c) => `[${mmss(c.start)}] ${c.text}`).join("\n");
+    return `${head}${topics}${frames}
+
+逐字稿：
+${cues}`;
+  }
+  var unfence = (s) => s.trim().replace(/^```(?:markdown|md)?\n([\s\S]*)\n```$/, "$1").trim();
+  async function notesAvailable() {
+    return !!await freeConfig() || !!(await getSettings()).claudeKey;
+  }
+  async function generateNotes(clip) {
+    const free = await freeConfig();
+    if (free) {
+      const text = await complete(free, [{ role: "system", content: SYSTEM }, { role: "user", content: userPrompt(clip) }]);
+      return { text: unfence(text), model: free.model };
+    }
+    let c, model;
+    try {
+      ({ c, model } = await client());
+    } catch (e) {
+      if (e instanceof NoKeyError) throw new Error("还没有配置免费模型或 Claude API Key：右键插件图标 → 选项");
+      throw e;
+    }
+    const stream2 = c.messages.stream({
+      model,
+      max_tokens: 16e3,
+      output_config: { effort: "low" },
+      system: SYSTEM,
+      messages: [{ role: "user", content: userPrompt(clip) }]
+    });
+    return { text: unfence(await stream2.finalText()), model };
   }
 
   // src/lib/markdown.js
@@ -44473,6 +44601,7 @@ ${messages.at(-1).content}` };
     return {
       ai: !!s.claudeKey,
       model: s.model,
+      notes_ai: !!(s.claudeKey || s.freeProvider),
       folder: s.folder,
       api_key_hint: hint(s.claudeKey),
       github_repo: s.ghRepo,
@@ -44542,6 +44671,19 @@ ${messages.at(-1).content}` };
     clip.notes = body.notes;
     await save(clip);
     return { ok: true };
+  });
+  on("POST", "/api/clips/:id/ai-notes", async ({ id }) => {
+    if (!await notesAvailable()) throw new HttpError(400, "还没有配置免费模型或 Claude API Key：右键插件图标 → 选项");
+    const { text, model } = await keepAlive(generateNotes(await load(id)));
+    const latest = await load(id);
+    const block = `## AI 整理笔记
+
+> 由 ${model} 根据逐字稿整理，${now()}
+
+${text}`;
+    latest.notes = (latest.notes?.trim() ? latest.notes.trimEnd() + "\n\n" : "") + block;
+    await save(latest);
+    return { notes: latest.notes, model };
   });
   on("POST", "/api/clips/:id/topics/regen", async ({ id }) => {
     if (!await aiAvailable()) throw new HttpError(400, "还没有配置 Claude API Key");

@@ -247,7 +247,7 @@
     const c = S.clip;
     const frames = c.frames.map((f) => `<div class="frame"><img src="" data-n="${f.n}" alt=""><div><a class="ts" data-time="${f.time}">${fmt(f.time)}</a> ${esc(f.caption || "")}</div></div>`).join("");
     setBody(`<div class="notes">
-      <h5>我的笔记 <span class="hint" id="ns">自动保存</span></h5>
+      <h5>我的笔记 <span><button class="ghost" data-act="ainotes" title="用 AI 把逐字稿整理成笔记，追加到下面">✨ AI 整理笔记</button> <span class="hint" id="ns">自动保存</span></span></h5>
       <textarea class="note">${esc(c.notes || "")}</textarea>
       <h5>关键帧</h5>
       <div class="paste" tabindex="0">在 Udemy 里按 <b>Win+Shift+S</b> 截图，点这里再按 <b>Ctrl+V</b> 粘贴。时间点自动取当前播放位置。</div>
@@ -290,6 +290,7 @@
         else toast("存入失败：" + (r.data?.detail || r.status), 5000);
         return;
       }
+      case "ainotes": return aiNotes(el);
       case "saveframe": return saveFrame();
       case "dropframe": S.frameDraft = null; $(".draft").hidden = true; return;
     }
@@ -332,6 +333,20 @@
     const r = await kld("PUT", `/api/clips/${S.clip.id}/notes`, { notes: S.clip.notes });
     const ns = $("#ns");
     if (ns) ns.textContent = r.ok ? "已保存" : "保存失败";
+  }
+  async function aiNotes(btn) {
+    if (!S.clip || btn.disabled) return;
+    await saveNotes();
+    btn.disabled = true;
+    btn.textContent = "整理中…（约半分钟）";
+    const r = await kld("POST", `/api/clips/${S.clip.id}/ai-notes`);
+    btn.disabled = false;
+    btn.textContent = "✨ AI 整理笔记";
+    if (!r.ok) return toast("整理失败：" + (r.data?.detail || r.status), 6000);
+    S.clip.notes = r.data.notes;
+    const ta = $(".note");
+    if (ta) { ta.value = S.clip.notes; ta.scrollTop = ta.scrollHeight; }
+    toast(`已追加到笔记（${r.data.model}）`);
   }
   async function addNote(text) {
     S.clip.notes = (S.clip.notes?.trim() ? S.clip.notes.trimEnd() + "\n\n" : "") + text.trim();

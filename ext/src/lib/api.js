@@ -4,6 +4,7 @@
 //   .kld/clips/<id>.json                     —— KLD 的学习数据（换电脑时从这里恢复）
 import { aiAvailable, chatStream, splitTopics } from "./claude.js";
 import * as gh from "./github.js";
+import { generateNotes, notesAvailable } from "./notesai.js";
 import { buildMarkdown, framePath, notePath } from "./markdown.js";
 import { getSettings, hint } from "./settings.js";
 import * as store from "./store.js";
@@ -156,7 +157,7 @@ const on = (method, pattern, fn) => routes.push({ method, re: new RegExp(`^${pat
 on("GET", "/api/settings", async () => {
   const s = await getSettings();
   return {
-    ai: !!s.claudeKey, model: s.model, folder: s.folder, api_key_hint: hint(s.claudeKey),
+    ai: !!s.claudeKey, model: s.model, notes_ai: !!(s.claudeKey || s.freeProvider), folder: s.folder, api_key_hint: hint(s.claudeKey),
     github_repo: s.ghRepo, github_branch: s.ghBranch, github_token_hint: hint(s.ghToken),
     github: !!(s.ghRepo && s.ghToken), autosync: s.autosync, extension: true,
   };
@@ -213,6 +214,16 @@ on("PUT", "/api/clips/:id/notes", async ({ id }, body) => {
   clip.notes = body.notes;
   await save(clip);
   return { ok: true };
+});
+
+on("POST", "/api/clips/:id/ai-notes", async ({ id }) => {
+  if (!(await notesAvailable())) throw new HttpError(400, "还没有配置免费模型或 Claude API Key：右键插件图标 → 选项");
+  const { text, model } = await keepAlive(generateNotes(await load(id)));
+  const latest = await load(id); // 生成期间用户可能又改了笔记
+  const block = `## AI 整理笔记\n\n> 由 ${model} 根据逐字稿整理，${now()}\n\n${text}`;
+  latest.notes = (latest.notes?.trim() ? latest.notes.trimEnd() + "\n\n" : "") + block;
+  await save(latest);
+  return { notes: latest.notes, model };
 });
 
 on("POST", "/api/clips/:id/topics/regen", async ({ id }) => {

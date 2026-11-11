@@ -456,6 +456,26 @@ async function saveNotes() {
   await api(`/api/clips/${clip.id}/notes`, { method: "PUT", body: { notes: clip.notes } });
   $("#notesState").textContent = settingsCache?.github && settingsCache?.autosync ? "已保存，稍后自动同步" : "已保存";
 }
+$("#aiNotes").addEventListener("click", async () => {
+  const b = $("#aiNotes");
+  if (!clip || b.disabled) return;
+  clearTimeout(notesTimer);
+  await saveNotes();
+  b.disabled = true;
+  b.textContent = "整理中…（约半分钟）";
+  try {
+    const r = await api(`/api/clips/${clip.id}/ai-notes`, { method: "POST" });
+    clip.notes = r.notes;
+    $("#notes").value = r.notes;
+    $("#notes").scrollTop = $("#notes").scrollHeight;
+    toast(`已追加到「我的笔记」（${r.model}）`);
+  } catch (e) {
+    toast("整理失败：" + e.message, 6000);
+  } finally {
+    b.disabled = false;
+    b.textContent = "✨ AI 整理笔记";
+  }
+});
 function appendNote(text) {
   const n = $("#notes");
   n.value = (n.value.trim() ? n.value.trimEnd() + "\n\n" : "") + text.trim();

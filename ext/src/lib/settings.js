@@ -7,6 +7,11 @@ const DEFAULTS = {
   ghToken: "",
   folder: "视频笔记",
   autosync: true,
+  // 免费模型（OpenAI 兼容接口），用来把逐字稿整理成笔记；freeProvider 为空表示不用
+  freeProvider: "",
+  freeBase: "",
+  freeKey: "",
+  freeModel: "",
 };
 
 export async function getSettings() {

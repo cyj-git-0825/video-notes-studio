@@ -13,12 +13,13 @@
   .msg.ok { color: var(--t1b); } .msg.err { color: var(--accent); }
   .check { display: flex; align-items: center; gap: 6px; margin-top: 12px; }
   .check input { width: auto; }
+  #freeProvider { width: 100%; padding: 8px 10px; }
 </style>
 </head>
 <body>
 <main class="opt">
   <div class="collect-brand"><span class="logo">K</span><h1>KLD 设置</h1></div>
-  <p class="muted">这些信息只保存在这台电脑的 Chrome 里。Claude Key 只发给 Anthropic，GitHub token 只发给 GitHub。</p>
+  <p class="muted">这些信息只保存在这台电脑的 Chrome 里。Claude Key 只发给 Anthropic，免费模型的 Key 只发给你选的服务商，GitHub token 只发给 GitHub。</p>
 
   <section class="card">
     <h2>Claude（话题切分、AI 追问）</h2>
@@ -29,6 +30,27 @@
     <p class="hint">在 console.anthropic.com 创建 Key，按用量付费。不填也能用：话题会按时长粗分，但没有 AI 追问。</p>
     <div class="row-end"><button class="btn ghost" id="testClaude">测试</button></div>
     <div class="msg" id="claudeMsg"></div>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>免费模型（AI 整理笔记）</h2>
+    <p class="hint">「笔记」里的「✨ AI 整理笔记」会把逐字稿整理成结构化笔记。配了免费模型就用它，没配就用上面的 Claude。</p>
+    <label class="label" for="freeProvider">服务商</label>
+    <select id="freeProvider">
+      <option value="">不用免费模型</option>
+    </select>
+    <div id="freeFields">
+      <p class="hint" id="freeNote"></p>
+      <label class="label" for="freeKey">API Key <span class="small muted" id="freeHint"></span> <a id="freeKeyUrl" target="_blank" class="small">去申请 ↗</a></label>
+      <input id="freeKey" type="password" placeholder="留空则不修改" autocomplete="off">
+      <label class="label" for="freeModel">模型</label>
+      <input id="freeModel" list="freeModels">
+      <datalist id="freeModels"></datalist>
+      <label class="label" for="freeBase">接口地址</label>
+      <input id="freeBase">
+      <div class="row-end"><button class="btn ghost" id="testFree">测试</button></div>
+      <div class="msg" id="freeMsg"></div>
+    </div>
   </section>
 
   <section class="card" style="margin-top:16px">
