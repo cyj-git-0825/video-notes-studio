@@ -44741,11 +44741,20 @@ ${messages.at(-1).content}` };
       }
     });
   });
+  var UDEMY_COURSE = /^https:\/\/[^/]+\.udemy\.com\/course\//;
+  var inject = (tabId) => chrome.scripting.executeScript({ target: { tabId }, files: ["dist/content.js"] });
   chrome.action.onClicked.addListener(async (tab) => {
     try {
       await chrome.tabs.sendMessage(tab.id, { type: "toggle" });
     } catch {
-      chrome.tabs.create({ url: chrome.runtime.getURL("app.html") });
+      if (UDEMY_COURSE.test(tab.url || "")) await inject(tab.id).catch(() => {
+      });
+      else chrome.tabs.create({ url: chrome.runtime.getURL("app.html") });
     }
+  });
+  chrome.runtime.onInstalled.addListener(async () => {
+    const tabs = await chrome.tabs.query({ url: "https://*.udemy.com/course/*" });
+    for (const t of tabs) inject(t.id).catch(() => {
+    });
   });
 })();

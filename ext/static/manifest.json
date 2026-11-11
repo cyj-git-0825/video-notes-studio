@@ -3,7 +3,7 @@
   "name": "KLD 视频学习台",
   "version": "0.2.0",
   "description": "把小红书视频和 Udemy 课程变成知识：逐字稿、话题、AI 追问、关键帧、笔记，存进 Obsidian（GitHub 同步）。",
-  "permissions": ["storage", "declarativeNetRequestWithHostAccess"],
+  "permissions": ["storage", "scripting", "declarativeNetRequestWithHostAccess"],
   "host_permissions": [
     "https://*.udemy.com/*",
     "https://*.udemycdn.com/*",

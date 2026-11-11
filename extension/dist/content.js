@@ -1,8 +1,16 @@
 (() => {
   // src/content.js
   (() => {
-    if (window.__kld) return;
-    window.__kld = true;
+    if (window.__kld && window.__kld.alive()) return;
+    const me = { alive: () => {
+      try {
+        return !!chrome.runtime?.id;
+      } catch {
+        return false;
+      }
+    } };
+    window.__kld = me;
+    document.getElementById("kld-sidebar-host")?.remove();
     const W = 400;
     const S = { open: true, lectureId: null, clip: null, focus: null, tab: "transcript", cueEls: [], now: -1, chatting: false, frameDraft: null };
     const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -411,7 +419,13 @@
       }
       return ans;
     }
-    setInterval(() => {
+    const tick = setInterval(() => {
+      if (window.__kld !== me || !me.alive()) {
+        clearInterval(tick);
+        if (window.__kld !== me) return;
+        host.remove();
+        return;
+      }
       const pl = pageLecture();
       if ((pl?.id ?? null) !== S.lectureId) loadLecture();
       if (!S.open || !S.clip || S.tab !== "transcript") return;

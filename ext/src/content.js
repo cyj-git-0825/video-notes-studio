@@ -3,8 +3,11 @@
 // - 播放：直接控制页面里的 <video>：高亮当前句、点一句跳过去（视频本身不下载、不解密）
 // - 存储、AI、同步都在插件后台（bg.js）完成，数据最终存进 GitHub 上的 Obsidian 仓库
 (() => {
-  if (window.__kld) return;
-  window.__kld = true;
+  // 同一插件实例只注入一次；插件刷新后旧实例失效，新实例接管（旧的会自己退出）
+  if (window.__kld && window.__kld.alive()) return;
+  const me = { alive: () => { try { return !!chrome.runtime?.id; } catch { return false; } } };
+  window.__kld = me;
+  document.getElementById("kld-sidebar-host")?.remove();
 
   const W = 400;
   const S = { open: true, lectureId: null, clip: null, focus: null, tab: "transcript", cueEls: [], now: -1, chatting: false, frameDraft: null };
@@ -399,7 +402,8 @@
     }
     return ans;
   }
-  setInterval(() => {
+  const tick = setInterval(() => {
+    if (window.__kld !== me || !me.alive()) { clearInterval(tick); if (window.__kld !== me) return; host.remove(); return; }
     // Udemy 是单页应用：换课时网址变了但页面不刷新
     const pl = pageLecture();
     if ((pl?.id ?? null) !== S.lectureId) loadLecture();

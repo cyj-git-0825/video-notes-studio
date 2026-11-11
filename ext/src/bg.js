@@ -66,10 +66,21 @@ chrome.runtime.onConnect.addListener((port) => {
 });
 
 // 点插件图标：在 Udemy 课时页面上显示 / 隐藏侧边栏；其他页面打开 KLD 学习台
+const UDEMY_COURSE = /^https:\/\/[^/]+\.udemy\.com\/course\//;
+const inject = (tabId) => chrome.scripting.executeScript({ target: { tabId }, files: ["dist/content.js"] });
+
 chrome.action.onClicked.addListener(async (tab) => {
   try {
     await chrome.tabs.sendMessage(tab.id, { type: "toggle" });
   } catch {
-    chrome.tabs.create({ url: chrome.runtime.getURL("app.html") });
+    // 插件刚装好或刚刷新时，已经打开的 Udemy 页面里还没有侧边栏：直接注入
+    if (UDEMY_COURSE.test(tab.url || "")) await inject(tab.id).catch(() => {});
+    else chrome.tabs.create({ url: chrome.runtime.getURL("app.html") });
   }
+});
+
+// Chrome 不会给已打开的标签页补注入内容脚本：安装 / 更新后手动补上
+chrome.runtime.onInstalled.addListener(async () => {
+  const tabs = await chrome.tabs.query({ url: "https://*.udemy.com/course/*" });
+  for (const t of tabs) inject(t.id).catch(() => {});
 });
