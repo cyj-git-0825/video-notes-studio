@@ -2,6 +2,7 @@
 import DOMPurify from "dompurify";
 import { marked } from "marked";
 import { chat, request, syncPending } from "./lib/api.js";
+import { transcriptText } from "./lib/subs.js";
 
 const $ = (s) => document.querySelector(s);
 const api = async (path, opts = {}) => {
@@ -279,6 +280,7 @@ function renderTranscript() {
     flush();
     html += `</div>`;
   }
+  html += `<div class="copybar"><button class="btn ghost small" id="copyTranscript">📋 ${focusTopic === null ? "复制全部逐字稿" : "复制这个话题的逐字稿"}</button></div>`;
   $("#transcriptPane").innerHTML = html;
   cueEls = [];
   document.querySelectorAll("#transcriptPane .cue").forEach((el) => (cueEls[+el.dataset.i] = el));
@@ -286,7 +288,14 @@ function renderTranscript() {
   syncCue();
 }
 
-$("#transcriptPane").addEventListener("click", (e) => {
+$("#transcriptPane").addEventListener("click", async (e) => {
+  if (e.target.closest("#copyTranscript")) {
+    try {
+      await navigator.clipboard.writeText(transcriptText(clip, focusTopic));
+      toast("逐字稿已复制");
+    } catch { toast("复制失败：浏览器不允许访问剪贴板"); }
+    return;
+  }
   const cue = e.target.closest(".cue"), ts = e.target.closest(".ts");
   if (cue) {
     seek(clip.cues[+cue.dataset.i].start);

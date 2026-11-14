@@ -46997,6 +46997,35 @@ ${formattedIssues}${suffix}`);
   function joinCues(cues) {
     return cues.map((c) => isCJK(c.text) ? /[，。？！,.?!]$/.test(c.text) ? c.text : c.text + "，" : c.text + " ").join("").trim();
   }
+  function transcriptText(clip2, only = null) {
+    const mmss2 = (t) => {
+      t = Math.max(0, Math.floor(t));
+      const h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60;
+      return (h ? `${h}:${String(m).padStart(2, "0")}` : String(m).padStart(2, "0")) + ":" + String(s).padStart(2, "0");
+    };
+    const topics = clip2.topics?.length ? clip2.topics : [{ title: "", start_cue: 0, end_cue: clip2.cues.length - 1 }];
+    const pick2 = only === null ? topics.map((t, i) => [t, i]) : [[topics[only], only]];
+    const out = [];
+    for (const [t, i] of pick2) {
+      if (t.title) out.push(`## ${i + 1}. ${t.title}`);
+      let para = "", start = null;
+      const flush = () => {
+        if (para.trim()) out.push(`[${mmss2(start)}] ${para.trim().replace(/，$/, "。")}`);
+        para = "";
+      };
+      for (let k = t.start_cue; k <= t.end_cue; k++) {
+        const c = clip2.cues[k];
+        if (!c) continue;
+        if (start === null || c.start - start > 25) {
+          flush();
+          start = c.start;
+        }
+        para += /[一-鿿]/.test(c.text) ? /[，。？！,.?!]$/.test(c.text) ? c.text : c.text + "，" : c.text + " ";
+      }
+      flush();
+    }
+    return out.join("\n\n");
+  }
 
   // src/lib/claude.js
   var FALLBACK_BETA = "server-side-fallback-2026-07-01";
@@ -48075,13 +48104,23 @@ ${text}`;
       flush();
       html2 += `</div>`;
     }
+    html2 += `<div class="copybar"><button class="btn ghost small" id="copyTranscript">📋 ${focusTopic === null ? "复制全部逐字稿" : "复制这个话题的逐字稿"}</button></div>`;
     $("#transcriptPane").innerHTML = html2;
     cueEls = [];
     document.querySelectorAll("#transcriptPane .cue").forEach((el) => cueEls[+el.dataset.i] = el);
     nowCue = -1;
     syncCue();
   }
-  $("#transcriptPane").addEventListener("click", (e) => {
+  $("#transcriptPane").addEventListener("click", async (e) => {
+    if (e.target.closest("#copyTranscript")) {
+      try {
+        await navigator.clipboard.writeText(transcriptText(clip, focusTopic));
+        toast("逐字稿已复制");
+      } catch {
+        toast("复制失败：浏览器不允许访问剪贴板");
+      }
+      return;
+    }
     const cue = e.target.closest(".cue"), ts = e.target.closest(".ts");
     if (cue) {
       seek(clip.cues[+cue.dataset.i].start);

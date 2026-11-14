@@ -1,4 +1,35 @@
 (() => {
+  // src/lib/subs.js
+  function transcriptText(clip, only = null) {
+    const mmss = (t) => {
+      t = Math.max(0, Math.floor(t));
+      const h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60;
+      return (h ? `${h}:${String(m).padStart(2, "0")}` : String(m).padStart(2, "0")) + ":" + String(s).padStart(2, "0");
+    };
+    const topics = clip.topics?.length ? clip.topics : [{ title: "", start_cue: 0, end_cue: clip.cues.length - 1 }];
+    const pick = only === null ? topics.map((t, i) => [t, i]) : [[topics[only], only]];
+    const out = [];
+    for (const [t, i] of pick) {
+      if (t.title) out.push(`## ${i + 1}. ${t.title}`);
+      let para = "", start = null;
+      const flush = () => {
+        if (para.trim()) out.push(`[${mmss(start)}] ${para.trim().replace(/，$/, "。")}`);
+        para = "";
+      };
+      for (let k = t.start_cue; k <= t.end_cue; k++) {
+        const c = clip.cues[k];
+        if (!c) continue;
+        if (start === null || c.start - start > 25) {
+          flush();
+          start = c.start;
+        }
+        para += /[一-鿿]/.test(c.text) ? /[，。？！,.?!]$/.test(c.text) ? c.text : c.text + "，" : c.text + " ";
+      }
+      flush();
+    }
+    return out.join("\n\n");
+  }
+
   // src/content.js
   (() => {
     if (window.__kld && window.__kld.alive()) return;
@@ -215,6 +246,7 @@
         flush();
         html += "</section>";
       }
+      html += `<div class="copybar"><button class="ghost" data-act="copytranscript">📋 ${S.focus === null ? "复制全部逐字稿" : "复制这个话题的逐字稿"}</button></div>`;
       setBody(html);
       S.cueEls = [];
       root.querySelectorAll(".cue").forEach((el) => S.cueEls[+el.dataset.i] = el);
@@ -292,6 +324,8 @@
         }
         case "ainotes":
           return aiNotes(el);
+        case "copytranscript":
+          return toast(await copyText(transcriptText(S.clip, S.focus)) ? "逐字稿已复制" : "复制失败：浏览器不允许访问剪贴板");
         case "saveframe":
           return saveFrame();
         case "dropframe":
@@ -335,6 +369,21 @@
       const r = await kld("PUT", `/api/clips/${S.clip.id}/notes`, { notes: S.clip.notes });
       const ns = $("#ns");
       if (ns) ns.textContent = r.ok ? "已保存" : "保存失败";
+    }
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+      }
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.cssText = "position:fixed;left:-9999px;top:0";
+      root.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      ta.remove();
+      return ok;
     }
     async function aiNotes(btn) {
       if (!S.clip || btn.disabled) return;
@@ -496,6 +545,8 @@ nav button.on { color: #2b2522; border-color: #b5321f; }
 .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
 .chip { border: 1px solid var(--b, #ebe5dd); background: var(--bg, #fff); border-radius: 999px; padding: 1px 9px; font-size: 12px; color: #2b2522; }
 .chip.on { outline: 2px solid var(--b, #b5321f); outline-offset: 1px; }
+.copybar { display: flex; justify-content: center; padding: 6px 0 14px; }
+.copybar .ghost { padding: 4px 14px; }
 .c0 { --b: #c9503b; --bg: #fbe4de; } .c1 { --b: #4f9a63; --bg: #e3f1e6; } .c2 { --b: #c09232; --bg: #fbf1d9; }
 .c3 { --b: #5479b0; --bg: #e2ebf7; } .c4 { --b: #8a5ba8; --bg: #efe4f5; }
 .topic { border-left: 3px solid var(--b); background: var(--bg); border-radius: 0 8px 8px 0; padding: 2px 10px 6px; margin-bottom: 10px; }

@@ -228,3 +228,5 @@ select { font: inherit; color: inherit; background: var(--bg); border: 1px solid
 .steps.three { grid-template-columns: repeat(3, 1fr); }
 .setup-bar { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); color: var(--muted); }
 .setup-bar .ok { color: var(--t1b); }
+
+.copybar { display: flex; justify-content: center; padding: 8px 0 16px; }

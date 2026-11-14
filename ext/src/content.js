@@ -2,6 +2,8 @@
 // - 字幕：用你当前的 Udemy 登录状态在页面里读（cookie 不离开浏览器），发给 KLD 建课时
 // - 播放：直接控制页面里的 <video>：高亮当前句、点一句跳过去（视频本身不下载、不解密）
 // - 存储、AI、同步都在插件后台（bg.js）完成，数据最终存进 GitHub 上的 Obsidian 仓库
+import { transcriptText } from "./lib/subs.js";
+
 (() => {
   // 同一插件实例只注入一次；插件刷新后旧实例失效，新实例接管（旧的会自己退出）
   if (window.__kld && window.__kld.alive()) return;
@@ -218,6 +220,7 @@
       flush();
       html += "</section>";
     }
+    html += `<div class="copybar"><button class="ghost" data-act="copytranscript">📋 ${S.focus === null ? "复制全部逐字稿" : "复制这个话题的逐字稿"}</button></div>`;
     setBody(html);
     S.cueEls = [];
     root.querySelectorAll(".cue").forEach((el) => (S.cueEls[+el.dataset.i] = el));
@@ -291,6 +294,8 @@
         return;
       }
       case "ainotes": return aiNotes(el);
+      case "copytranscript":
+        return toast((await copyText(transcriptText(S.clip, S.focus))) ? "逐字稿已复制" : "复制失败：浏览器不允许访问剪贴板");
       case "saveframe": return saveFrame();
       case "dropframe": S.frameDraft = null; $(".draft").hidden = true; return;
     }
@@ -333,6 +338,18 @@
     const r = await kld("PUT", `/api/clips/${S.clip.id}/notes`, { notes: S.clip.notes });
     const ns = $("#ns");
     if (ns) ns.textContent = r.ok ? "已保存" : "保存失败";
+  }
+  // 有的页面会限制剪贴板接口，失败时退回到老办法（选中隐藏文本框再复制）
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); return true; } catch {}
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;left:-9999px;top:0";
+    root.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    ta.remove();
+    return ok;
   }
   async function aiNotes(btn) {
     if (!S.clip || btn.disabled) return;
@@ -471,6 +488,8 @@ nav button.on { color: #2b2522; border-color: #b5321f; }
 .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
 .chip { border: 1px solid var(--b, #ebe5dd); background: var(--bg, #fff); border-radius: 999px; padding: 1px 9px; font-size: 12px; color: #2b2522; }
 .chip.on { outline: 2px solid var(--b, #b5321f); outline-offset: 1px; }
+.copybar { display: flex; justify-content: center; padding: 6px 0 14px; }
+.copybar .ghost { padding: 4px 14px; }
 .c0 { --b: #c9503b; --bg: #fbe4de; } .c1 { --b: #4f9a63; --bg: #e3f1e6; } .c2 { --b: #c09232; --bg: #fbf1d9; }
 .c3 { --b: #5479b0; --bg: #e2ebf7; } .c4 { --b: #8a5ba8; --bg: #efe4f5; }
 .topic { border-left: 3px solid var(--b); background: var(--bg); border-radius: 0 8px 8px 0; padding: 2px 10px 6px; margin-bottom: 10px; }

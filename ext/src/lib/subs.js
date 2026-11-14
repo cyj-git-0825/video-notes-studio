@@ -53,3 +53,29 @@ export const isCJK = (s) => /[一-鿿]/.test(s);
 export function joinCues(cues) {
   return cues.map((c) => (isCJK(c.text) ? (/[，。？！,.?!]$/.test(c.text) ? c.text : c.text + "，") : c.text + " ")).join("").trim();
 }
+
+// 逐字稿转纯文本（用于复制）：按话题分组，每 ~25 秒一段，段首标 [mm:ss]
+// only 为话题下标时只导出这一个话题
+export function transcriptText(clip, only = null) {
+  const mmss = (t) => {
+    t = Math.max(0, Math.floor(t));
+    const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+    return (h ? `${h}:${String(m).padStart(2, "0")}` : String(m).padStart(2, "0")) + ":" + String(s).padStart(2, "0");
+  };
+  const topics = clip.topics?.length ? clip.topics : [{ title: "", start_cue: 0, end_cue: clip.cues.length - 1 }];
+  const pick = only === null ? topics.map((t, i) => [t, i]) : [[topics[only], only]];
+  const out = [];
+  for (const [t, i] of pick) {
+    if (t.title) out.push(`## ${i + 1}. ${t.title}`);
+    let para = "", start = null;
+    const flush = () => { if (para.trim()) out.push(`[${mmss(start)}] ${para.trim().replace(/，$/, "。")}`); para = ""; };
+    for (let k = t.start_cue; k <= t.end_cue; k++) {
+      const c = clip.cues[k];
+      if (!c) continue;
+      if (start === null || c.start - start > 25) { flush(); start = c.start; }
+      para += /[一-鿿]/.test(c.text) ? (/[，。？！,.?!]$/.test(c.text) ? c.text : c.text + "，") : c.text + " ";
+    }
+    flush();
+  }
+  return out.join("\n\n");
+}
